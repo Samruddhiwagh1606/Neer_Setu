@@ -1,22 +1,34 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: NeerSetu API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: users
+    description: User operations
+  - name: providers
+    description: Provider operations
+  - name: ngos
+    description: NGO operations
+  - name: service-requests
+    description: Service request operations
+  - name: schemes
+    description: Government schemes
+  - name: articles
+    description: Awareness articles
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,7 +36,438 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "200":
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /providers:
+    get:
+      operationId: getProviders
+      tags: [providers]
+      summary: List all providers
+      parameters:
+        - name: city
+          in: query
+          schema:
+            type: string
+        - name: state
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of providers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Provider"
+
+  /providers/me:
+    get:
+      operationId: getMyProviderProfile
+      tags: [providers]
+      summary: Get my provider profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Provider profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Provider"
+    put:
+      operationId: updateProviderProfile
+      tags: [providers]
+      summary: Update my provider profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProviderUpdateRequest"
+      responses:
+        "200":
+          description: Updated provider profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Provider"
+
+  /providers/{id}:
+    get:
+      operationId: getProviderById
+      tags: [providers]
+      summary: Get provider by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Provider details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Provider"
+
+  /service-requests:
+    get:
+      operationId: getServiceRequests
+      tags: [service-requests]
+      summary: Get service requests (role-based)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of service requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ServiceRequest"
+    post:
+      operationId: createServiceRequest
+      tags: [service-requests]
+      summary: Create a service request
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateServiceRequestRequest"
+      responses:
+        "200":
+          description: Created service request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceRequest"
+
+  /service-requests/{id}/status:
+    put:
+      operationId: updateServiceRequestStatus
+      tags: [service-requests]
+      summary: Update service request status
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStatusRequest"
+      responses:
+        "200":
+          description: Updated service request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceRequest"
+
+  /service-requests/{id}/rate:
+    post:
+      operationId: rateProvider
+      tags: [service-requests]
+      summary: Rate a provider after service
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RatingRequest"
+      responses:
+        "200":
+          description: Rating submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceRequest"
+
+  /users/saved-providers:
+    get:
+      operationId: getSavedProviders
+      tags: [users]
+      summary: Get saved providers
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Saved providers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Provider"
+    post:
+      operationId: saveProvider
+      tags: [users]
+      summary: Save a provider
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaveProviderRequest"
+      responses:
+        "200":
+          description: Provider saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /users/saved-providers/{providerId}:
+    delete:
+      operationId: unsaveProvider
+      tags: [users]
+      summary: Remove a saved provider
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: providerId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Provider unsaved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /ngos/me:
+    get:
+      operationId: getNgoProfile
+      tags: [ngos]
+      summary: Get my NGO profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: NGO profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ngo"
+
+  /ngos/me/providers:
+    get:
+      operationId: getNgoProviders
+      tags: [ngos]
+      summary: Get providers onboarded by NGO
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Providers list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Provider"
+
+  /ngos/me/campaigns:
+    get:
+      operationId: getNgoCampaigns
+      tags: [ngos]
+      summary: Get NGO campaigns
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Campaigns list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Campaign"
+    post:
+      operationId: createCampaign
+      tags: [ngos]
+      summary: Create awareness campaign
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCampaignRequest"
+      responses:
+        "200":
+          description: Created campaign
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+
+  /ngos/invite-provider:
+    post:
+      operationId: inviteProvider
+      tags: [ngos]
+      summary: Invite a provider
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InviteProviderRequest"
+      responses:
+        "200":
+          description: Invite sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /schemes:
+    get:
+      operationId: getSchemes
+      tags: [schemes]
+      summary: Get government schemes
+      parameters:
+        - name: state
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of schemes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GovernmentScheme"
+
+  /articles:
+    get:
+      operationId: getArticles
+      tags: [articles]
+      summary: Get awareness articles
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of articles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Article"
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +477,380 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    RegisterRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        role:
+          type: string
+          enum: [user, provider, ngo]
+        location:
+          type: string
+        phone:
+          type: string
+        serviceArea:
+          type: string
+        organizationName:
+          type: string
+      required:
+        - name
+        - email
+        - password
+        - role
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+      required:
+        - token
+        - user
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [user, provider, ngo]
+        location:
+          type: string
+        phone:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - email
+        - role
+
+    Provider:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        serviceArea:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        portfolio:
+          type: string
+        experience:
+          type: integer
+        rating:
+          type: number
+          format: float
+        reviewCount:
+          type: integer
+        ngoId:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - email
+        - serviceArea
+
+    ProviderUpdateRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+        serviceArea:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        portfolio:
+          type: string
+        experience:
+          type: integer
+
+    ServiceRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        providerId:
+          type: integer
+          nullable: true
+        requestType:
+          type: string
+        systemType:
+          type: string
+        location:
+          type: string
+        preferredDate:
+          type: string
+        status:
+          type: string
+          enum: [pending, accepted, rejected, completed]
+        notes:
+          type: string
+        rating:
+          type: integer
+          nullable: true
+        review:
+          type: string
+          nullable: true
+        userName:
+          type: string
+        providerName:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - requestType
+        - systemType
+        - location
+        - status
+
+    CreateServiceRequestRequest:
+      type: object
+      properties:
+        providerId:
+          type: integer
+          nullable: true
+        requestType:
+          type: string
+        systemType:
+          type: string
+        location:
+          type: string
+        preferredDate:
+          type: string
+        notes:
+          type: string
+      required:
+        - requestType
+        - systemType
+        - location
+
+    UpdateStatusRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [accepted, rejected, completed]
+      required:
+        - status
+
+    RatingRequest:
+      type: object
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        review:
+          type: string
+      required:
+        - rating
+
+    SaveProviderRequest:
+      type: object
+      properties:
+        providerId:
+          type: integer
+      required:
+        - providerId
+
+    Ngo:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        organizationName:
+          type: string
+        providerCount:
+          type: integer
+        totalInstallations:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - email
+
+    Campaign:
+      type: object
+      properties:
+        id:
+          type: integer
+        ngoId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        targetAudience:
+          type: string
+        startDate:
+          type: string
+        endDate:
+          type: string
+        status:
+          type: string
+          enum: [active, completed, planned]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - description
+
+    CreateCampaignRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        targetAudience:
+          type: string
+        startDate:
+          type: string
+        endDate:
+          type: string
+      required:
+        - title
+        - description
+
+    InviteProviderRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        phone:
+          type: string
+      required:
+        - email
+        - name
+
+    GovernmentScheme:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        state:
+          type: string
+        subsidy:
+          type: string
+        eligibility:
+          type: string
+        description:
+          type: string
+        link:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - state
+        - subsidy
+
+    Article:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        category:
+          type: string
+        content:
+          type: string
+        imageUrl:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - category
+        - content

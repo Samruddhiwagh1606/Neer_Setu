@@ -1,0 +1,19 @@
+packages:
+  "framer-motion": "For beautiful page transitions, scroll reveals, and smooth interactions"
+  "date-fns": "For formatting dates in dashboards and requests"
+
+images:
+  - path: "artifacts/neersetu/public/images/hero-bg.png"
+    description: "A beautiful, premium, abstract background showing clean water ripples and subtle green leaves reflecting nature and sustainability, deep blues and teals, soft lighting, 4k, modern startup aesthetic"
+    aspect_ratio: "16:9"
+  - path: "artifacts/neersetu/public/images/logo-icon.png"
+    description: "A minimalist, premium app icon featuring a single elegant water drop intertwining with a small green leaf, isolated on transparent background, flat vector style, deep blue and vibrant green"
+    aspect_ratio: "1:1"
+  - path: "artifacts/neersetu/public/images/pattern-dots.png"
+    description: "Subtle geometric dot pattern in light blue, seamless, for background texture, low opacity"
+    aspect_ratio: "1:1"
+
+notes:
+  - Using generated hooks from @workspace/api-client-react
+  - Auth token is stored in localStorage as 'neersetu_token'
+  - Passing Authorization headers manually in generated hooks via request options

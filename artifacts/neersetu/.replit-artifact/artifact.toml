@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "NeerSetu - Rainwater Harvesting Platform"
+version = "1.0.0"
+id = "artifacts/neersetu"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+localPort = 21405
+name = "web"
+paths = ["/"]
+
+[services.development]
+run = "pnpm --filter @workspace/neersetu run dev"
+
+[services.env]
+PORT = "21405"
+BASE_PATH = "/"
+
+[services.production]
+build = ["pnpm", "--filter", "@workspace/neersetu", "run", "build"]
+publicDir = "artifacts/neersetu/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
